@@ -1,0 +1,41 @@
+data:
+  train_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/train.tsv
+  dev_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/dev.tsv
+  test_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/test.tsv
+  clips_dir: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/clips
+
+  sample_rate: 16000
+  n_mels: 80
+  n_fft: 400
+  hop_length: 160
+
+  tokenizer:
+    type: sentencepiece
+    vocab_size: 5000
+    model_path: ./tokenizer/fr_bpe.model
+
+  augmentation:
+    spec_augment:
+      enabled: true
+      freq_mask_param: 27
+      time_mask_param: 100
+      n_freq_masks: 2
+      n_time_masks: 10
+      time_warp_w: 80
+      time_warp_p: 0.5
+
+    noise:
+      enabled: true
+      min_snr_db: 5
+      max_snr_db: 20
+      noise_dir: null
+
+    silence:
+      enabled: true
+      min_silence_duration: 0.5
+      max_silence_duration: 2.0
+      silence_prob: 0.3
+
+    speed_perturb:
+      enabled: true
+      rates: [0.9, 1.0, 1.1]

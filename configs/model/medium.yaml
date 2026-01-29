@@ -1,0 +1,24 @@
+model:
+  name: zipmamba_medium
+  input_dim: 80
+  vocab_size: 5000
+
+  d_state: 16
+  d_conv: 4
+  mamba_expand: 2
+  ff_expand: 4
+  conv_kernel_size: 31
+  dropout: 0.1
+
+  drop_path: 0.1
+
+  use_intermediate_ctc: true
+  intermediate_ctc_weight: 0.3
+
+  stacks:
+    - {dim: 192, blocks: 2, downsample: 2}
+    - {dim: 256, blocks: 4, downsample: 2}
+    - {dim: 384, blocks: 3, downsample: 2}
+    - {dim: 512, blocks: 2, downsample: null}
+    - {dim: 384, blocks: 3, upsample: 2}
+    - {dim: 256, blocks: 4, upsample: 2}

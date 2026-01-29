@@ -1,0 +1,40 @@
+[project]
+name = "zipmamba"
+version = "0.1.0"
+description = "ASR model combining U-Net hierarchical downsampling with Bidirectional Mamba (SSM)"
+readme = "README.md"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "audiomentations>=0.43.1",
+    "einops>=0.8.2",
+    "librosa>=0.11.0",
+    "omegaconf>=2.3.0",
+    "pyyaml>=6.0.3",
+    "rich>=14.3.1",
+    "ruff>=0.14.14",
+    "sentencepiece>=0.2.1",
+    "soundfile>=0.13.1",
+    "tensorboard>=2.20.0",
+    "torch>=2.7,<2.8",
+    "torchaudio>=2.7,<2.8",
+    "torchcodec>=0.10.0",
+    "tqdm>=4.67.1",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+torchaudio = { index = "pytorch-cu126" }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
