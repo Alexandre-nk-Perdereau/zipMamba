@@ -1,0 +1,33 @@
+training:
+  optimizer: adamw
+  learning_rate: 5.0e-4
+  weight_decay: 0.01
+
+  max_epochs: 70
+  warmup_epochs: 2
+
+  batch_size: 64
+  gradient_accumulation_steps: 2
+  max_audio_length: 30.0
+
+  num_workers: 32
+  prefetch_factor: 2
+
+  mixed_precision: bf16
+  gradient_clip: 0.5
+
+  augmentation:
+    start_epoch: 5
+    warmup_epochs: 5
+
+  logging:
+    backend: tensorboard
+    log_dir: ./logs
+    log_every_n_steps: 100
+    n_audio_samples: 5
+
+  checkpointing:
+    save_dir: ./checkpoints
+    keep_top_k: 3
+    metric: val_wer
+    mode: min
