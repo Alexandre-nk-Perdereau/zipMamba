@@ -1,8 +1,8 @@
 data:
-  train_manifest: /workspace/data/fr/train.tsv
-  dev_manifest: /workspace/data/fr/dev.tsv
-  test_manifest: /workspace/data/fr/test.tsv
-  clips_dir: /workspace/data/fr/clips
+  train_manifest: /workspace/data/en/train.tsv
+  dev_manifest: /workspace/data/en/dev.tsv
+  test_manifest: /workspace/data/en/test.tsv
+  clips_dir: /workspace/data/en/clips
 
   sample_rate: 16000
   n_mels: 80
@@ -12,7 +12,7 @@ data:
   tokenizer:
     type: sentencepiece
     vocab_size: 5000
-    model_path: ./tokenizer/fr_bpe.model
+    model_path: ./tokenizer/en_bpe.model
 
   augmentation:
     spec_augment:

@@ -14,7 +14,7 @@ from zipmamba.data.augmentation import (
     SpecAugmentation,
     AugmentationController,
 )
-from zipmamba.data.dataset import create_dataloader
+from zipmamba.data.dataset import create_dataloader, create_multilanguage_dataloader
 from zipmamba.training.trainer import Trainer
 
 console = Console()
@@ -96,11 +96,17 @@ def main():
         import csv
 
         texts = []
-        with open(config.data.train_manifest, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            for row in reader:
-                if row.get("sentence"):
-                    texts.append(row["sentence"])
+
+        train_manifests = config.data.train_manifest
+        if not isinstance(train_manifests, list):
+            train_manifests = [train_manifests]
+
+        for manifest in train_manifests:
+            with open(manifest, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f, delimiter="\t")
+                for row in reader:
+                    if row.get("sentence"):
+                        texts.append(row["sentence"])
 
         console.print(f"Training on {len(texts)} sentences")
 
@@ -164,37 +170,73 @@ def main():
     console.print("[bold]Creating dataloaders...[/bold]")
 
     num_workers = config.training.get("num_workers", 8)
-    train_dataloader = create_dataloader(
-        manifest_path=config.data.train_manifest,
-        clips_dir=config.data.clips_dir,
-        audio_processor=audio_processor,
-        tokenizer=tokenizer,
-        batch_size=config.training.batch_size,
-        shuffle=True,
-        num_workers=num_workers,
-        audio_augmentation=audio_aug,
-        spec_augmentation=spec_aug,
-        max_audio_length=config.training.max_audio_length,
-        persistent_workers=True,
-        prefetch_factor=config.training.get("prefetch_factor", 2),
-    )
 
-    val_dataloader = None
-    if hasattr(config.data, "dev_manifest") and config.data.dev_manifest:
-        val_dataloader = create_dataloader(
-            manifest_path=config.data.dev_manifest,
-            clips_dir=config.data.clips_dir,
+    is_multilang = isinstance(config.data.train_manifest, list)
+
+    if is_multilang:
+        console.print("[bold cyan]Multi-language mode detected[/bold cyan]")
+        train_dataloader = create_multilanguage_dataloader(
+            manifest_paths=config.data.train_manifest,
+            clips_dirs=config.data.clips_dir,
             audio_processor=audio_processor,
             tokenizer=tokenizer,
             batch_size=config.training.batch_size,
-            shuffle=False,
+            shuffle=True,
             num_workers=num_workers,
-            audio_augmentation=None,
-            spec_augmentation=None,
+            audio_augmentation=audio_aug,
+            spec_augmentation=spec_aug,
             max_audio_length=config.training.max_audio_length,
             persistent_workers=True,
             prefetch_factor=config.training.get("prefetch_factor", 2),
         )
+    else:
+        train_dataloader = create_dataloader(
+            manifest_path=config.data.train_manifest,
+            clips_dir=config.data.clips_dir,
+            audio_processor=audio_processor,
+            tokenizer=tokenizer,
+            batch_size=config.training.batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            audio_augmentation=audio_aug,
+            spec_augmentation=spec_aug,
+            max_audio_length=config.training.max_audio_length,
+            persistent_workers=True,
+            prefetch_factor=config.training.get("prefetch_factor", 2),
+        )
+
+    val_dataloader = None
+    if hasattr(config.data, "dev_manifest") and config.data.dev_manifest:
+        if is_multilang:
+            val_dataloader = create_multilanguage_dataloader(
+                manifest_paths=config.data.dev_manifest,
+                clips_dirs=config.data.clips_dir,
+                audio_processor=audio_processor,
+                tokenizer=tokenizer,
+                batch_size=config.training.batch_size,
+                shuffle=False,
+                num_workers=num_workers,
+                audio_augmentation=None,
+                spec_augmentation=None,
+                max_audio_length=config.training.max_audio_length,
+                persistent_workers=True,
+                prefetch_factor=config.training.get("prefetch_factor", 2),
+            )
+        else:
+            val_dataloader = create_dataloader(
+                manifest_path=config.data.dev_manifest,
+                clips_dir=config.data.clips_dir,
+                audio_processor=audio_processor,
+                tokenizer=tokenizer,
+                batch_size=config.training.batch_size,
+                shuffle=False,
+                num_workers=num_workers,
+                audio_augmentation=None,
+                spec_augmentation=None,
+                max_audio_length=config.training.max_audio_length,
+                persistent_workers=True,
+                prefetch_factor=config.training.get("prefetch_factor", 2),
+            )
 
     console.print(f"Train samples: {len(train_dataloader.dataset)}")
     if val_dataloader:

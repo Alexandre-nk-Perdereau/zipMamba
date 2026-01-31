@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from torch.nn.utils.rnn import pad_sequence
 
 from .audio import AudioProcessor
@@ -247,6 +247,78 @@ def create_dataloader(
         collate_fn=collate_fn,
         pin_memory=pin_memory,
         drop_last=shuffle,  # Drop last incomplete batch during training
+        persistent_workers=num_workers > 0 and persistent_workers,
+        prefetch_factor=prefetch_factor if num_workers > 0 else None,
+    )
+
+
+def create_multilanguage_dataloader(
+    manifest_paths: list[Union[str, Path]],
+    clips_dirs: list[Union[str, Path]],
+    audio_processor: AudioProcessor,
+    tokenizer: Tokenizer,
+    batch_size: int = 32,
+    shuffle: bool = True,
+    num_workers: int = 8,
+    audio_augmentation: Optional[AudioAugmentation] = None,
+    spec_augmentation: Optional[SpecAugmentation] = None,
+    max_audio_length: Optional[float] = None,
+    max_text_length: Optional[int] = None,
+    pin_memory: bool = True,
+    persistent_workers: bool = True,
+    prefetch_factor: int = 2,
+) -> DataLoader:
+    """Create a DataLoader for multi-language Common Voice datasets.
+
+    Args:
+        manifest_paths: List of paths to TSV manifests (one per language).
+        clips_dirs: List of paths to clips directories (one per language).
+        audio_processor: AudioProcessor instance.
+        tokenizer: Tokenizer instance.
+        batch_size: Batch size.
+        shuffle: Whether to shuffle data.
+        num_workers: Number of data loading workers.
+        audio_augmentation: Audio augmentation (optional).
+        spec_augmentation: SpecAugment (optional).
+        max_audio_length: Maximum audio duration in seconds.
+        max_text_length: Maximum text length in characters.
+        pin_memory: Whether to pin memory for faster GPU transfer.
+        persistent_workers: Keep workers alive between epochs (faster).
+        prefetch_factor: Number of batches to prefetch per worker.
+
+    Returns:
+        DataLoader instance with combined datasets.
+    """
+    if len(manifest_paths) != len(clips_dirs):
+        raise ValueError(
+            f"Number of manifest_paths ({len(manifest_paths)}) must match "
+            f"number of clips_dirs ({len(clips_dirs)})"
+        )
+
+    datasets = []
+    for manifest_path, clips_dir in zip(manifest_paths, clips_dirs):
+        dataset = CommonVoiceDataset(
+            manifest_path=manifest_path,
+            clips_dir=clips_dir,
+            audio_processor=audio_processor,
+            tokenizer=tokenizer,
+            audio_augmentation=audio_augmentation,
+            spec_augmentation=spec_augmentation,
+            max_audio_length=max_audio_length,
+            max_text_length=max_text_length,
+        )
+        datasets.append(dataset)
+
+    combined_dataset = ConcatDataset(datasets)
+
+    return DataLoader(
+        combined_dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        collate_fn=collate_fn,
+        pin_memory=pin_memory,
+        drop_last=shuffle,
         persistent_workers=num_workers > 0 and persistent_workers,
         prefetch_factor=prefetch_factor if num_workers > 0 else None,
     )
