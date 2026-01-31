@@ -119,6 +119,7 @@ def main():
         ff_expand=config.model.ff_expand,
         conv_kernel_size=config.model.conv_kernel_size,
         dropout=config.model.dropout,
+        use_intermediate_ctc=getattr(config.model, "use_intermediate_ctc", False),
     )
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)

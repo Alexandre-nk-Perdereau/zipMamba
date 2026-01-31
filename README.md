@@ -134,13 +134,13 @@ stacks:
 
 ## Performance
 
-> Results on Common Voice (test split). To be completed after evaluation.
+> Results on Common Voice (test split). Training stopped at the end of epoch 28 as the model appeared to have reached its optimum (validation WER ~17%).
 
 ### French (Common Voice FR)
 
 | Model | WER (%) | CER (%) | RTF |
 |-------|---------|---------|-----|
-| Small (~30M) | - | - | - |
+| Small (~30M) | 22.28 | 9.31 | 0.0002 |
 | Medium (~83M) | - | - | - |
 
 ### French + English (Common Voice FR+EN)
