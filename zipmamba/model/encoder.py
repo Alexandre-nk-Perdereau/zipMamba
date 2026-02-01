@@ -59,6 +59,7 @@ class EfficientASREncoder(nn.Module):
         conv_kernel_size: int = 31,
         dropout: float = 0.1,
         drop_path: float = 0.0,
+        conv_channels: Optional[tuple[int, int, int]] = None,
     ):
         super().__init__()
 
@@ -69,7 +70,7 @@ class EfficientASREncoder(nn.Module):
         self.input_dim = input_dim
 
         first_dim = stack_config[0]["dim"]
-        self.conv_embed = ConvEmbed(input_dim, first_dim)
+        self.conv_embed = ConvEmbed(input_dim, first_dim, conv_channels=conv_channels)
 
         self.stacks = nn.ModuleList()
         self.downsamples = nn.ModuleList()
@@ -247,6 +248,7 @@ class EfficientASRModel(nn.Module):
         drop_path: float = 0.0,
         use_intermediate_ctc: bool = False,
         intermediate_ctc_weight: float = 0.3,
+        conv_channels: Optional[tuple[int, int, int]] = None,
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -266,6 +268,7 @@ class EfficientASRModel(nn.Module):
             conv_kernel_size=conv_kernel_size,
             dropout=dropout,
             drop_path=drop_path,
+            conv_channels=conv_channels,
         )
         self.ctc_proj = nn.Linear(self.encoder.output_dim, vocab_size)
 

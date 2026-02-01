@@ -109,6 +109,9 @@ def main():
     if hasattr(config.model, "stacks"):
         stack_config = [dict(s) for s in config.model.stacks]
 
+    conv_channels_cfg = config.model.get("conv_channels", None)
+    conv_channels = tuple(conv_channels_cfg) if conv_channels_cfg else None
+
     model = EfficientASRModel(
         vocab_size=len(tokenizer),
         input_dim=config.model.input_dim,
@@ -120,6 +123,7 @@ def main():
         conv_kernel_size=config.model.conv_kernel_size,
         dropout=config.model.dropout,
         use_intermediate_ctc=getattr(config.model, "use_intermediate_ctc", False),
+        conv_channels=conv_channels,
     )
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)

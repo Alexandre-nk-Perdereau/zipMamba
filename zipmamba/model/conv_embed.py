@@ -16,21 +16,42 @@ class ConvEmbed(nn.Module):
 
     Uses SwooshR activation instead of ReLU for better gradient flow,
     especially for negative inputs.
+
+    Args:
+        input_dim: Number of mel frequency bins (default: 80)
+        embed_dim: Output embedding dimension (default: 192)
+        conv_channels: Tuple of (c1, c2, c3) channel sizes for the 3 conv layers.
+                      If None, scales automatically based on embed_dim relative
+                      to baseline of 128 (e.g., embed_dim=192 → scale=1.5x).
     """
 
-    def __init__(self, input_dim: int = 80, embed_dim: int = 192):
+    def __init__(
+        self,
+        input_dim: int = 80,
+        embed_dim: int = 192,
+        conv_channels: tuple[int, int, int] | None = None,
+    ):
         super().__init__()
         self.act = SwooshR()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=(1, 2), padding=1)  # freq /2
+
+        if conv_channels is not None:
+            c1, c2, c3 = conv_channels
+        else:
+            scale = embed_dim / 128
+            c1 = max(8, int(8 * scale))
+            c2 = max(32, int(32 * scale))
+            c3 = max(128, int(128 * scale))
+
+        self.conv1 = nn.Conv2d(1, c1, kernel_size=3, stride=(1, 2), padding=1)  # freq /2
         self.conv2 = nn.Conv2d(
-            8, 32, kernel_size=3, stride=(2, 2), padding=1
+            c1, c2, kernel_size=3, stride=(2, 2), padding=1
         )  # time /2, freq /2
         self.conv3 = nn.Conv2d(
-            32, 128, kernel_size=3, stride=(1, 2), padding=1
+            c2, c3, kernel_size=3, stride=(1, 2), padding=1
         )  # freq /2
 
         conv_out_freq = input_dim // 8
-        self.proj = nn.Linear(128 * conv_out_freq, embed_dim)
+        self.proj = nn.Linear(c3 * conv_out_freq, embed_dim)
         self.norm = BiasNorm(embed_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

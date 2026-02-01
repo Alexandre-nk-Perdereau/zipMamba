@@ -248,6 +248,9 @@ def main():
     if hasattr(config.model, "stacks"):
         stack_config = [dict(s) for s in config.model.stacks]
 
+    conv_channels_cfg = config.model.get("conv_channels", None)
+    conv_channels = tuple(conv_channels_cfg) if conv_channels_cfg else None
+
     model = EfficientASRModel(
         vocab_size=len(tokenizer),
         input_dim=config.model.input_dim,
@@ -261,6 +264,7 @@ def main():
         drop_path=config.model.get("drop_path", 0.0),
         use_intermediate_ctc=config.model.get("use_intermediate_ctc", False),
         intermediate_ctc_weight=config.model.get("intermediate_ctc_weight", 0.3),
+        conv_channels=conv_channels,
     )
 
     total_params = sum(p.numel() for p in model.parameters())
