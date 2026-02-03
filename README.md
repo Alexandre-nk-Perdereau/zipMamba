@@ -141,9 +141,9 @@ stacks:
 | Model | WER (%) | CER (%) | RTF |
 |-------|---------|---------|-----|
 | Small (~30M) | 22.28 | 9.31 | 0.0002 |
-| Medium (~83M, legacy) | 22.14 | 9.19 | 0.0003 |
+| Medium (~83M) | 21.95 | 8.99 | 0.0003 |
 
-> Note: The minimal improvement from Small to Medium is surprising given the 3x parameter increase. Seams to be because of conv bottlenecks, currently investigating
+> Note: The minimal improvement from Small to Medium is surprising given the 3x parameter increase. More investigations are needed.
 
 ### English (Common Voice EN)
 
