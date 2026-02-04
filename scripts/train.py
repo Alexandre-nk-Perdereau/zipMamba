@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 
+from omegaconf import OmegaConf
 from rich.console import Console
 
 from zipmamba.utils.config import load_config, merge_configs
@@ -307,6 +308,7 @@ def main():
         aug_start_epoch=aug_start_epoch,
         aug_warmup_epochs=aug_warmup_epochs,
         set_augmentation_prob_fn=aug_controller.set_probability,
+        model_config=OmegaConf.to_container(config.model, resolve=True),
     )
 
     trainer.train()

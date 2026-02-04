@@ -199,6 +199,7 @@ class CheckpointCallback:
         metric_name: str = "val_loss",
         mode: str = "min",
         run_name: Optional[str] = None,
+        model_config: Optional[dict] = None,
     ):
         """Initialize CheckpointCallback.
 
@@ -208,7 +209,9 @@ class CheckpointCallback:
             metric_name: Name of metric to track (for logging).
             mode: "min" if lower is better, "max" if higher is better.
             run_name: Name for this run. If None, uses timestamp.
+            model_config: Model configuration dict to save with checkpoints.
         """
+        self.model_config = model_config
         base_dir = Path(save_dir)
         base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -285,6 +288,9 @@ class CheckpointCallback:
         if scheduler is not None:
             state["scheduler_state_dict"] = scheduler.state_dict()
 
+        if self.model_config is not None:
+            state["model_config"] = self.model_config
+
         if extra_state is not None:
             state.update(extra_state)
 
@@ -346,6 +352,9 @@ class CheckpointCallback:
         if scheduler is not None:
             state["scheduler_state_dict"] = scheduler.state_dict()
 
+        if self.model_config is not None:
+            state["model_config"] = self.model_config
+
         if extra_state is not None:
             state.update(extra_state)
 
@@ -391,6 +400,9 @@ class CheckpointCallback:
         """
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
 
+        if self.model_config is not None and "model_config" in checkpoint:
+            self._check_config_compatibility(checkpoint["model_config"])
+
         model.load_state_dict(checkpoint["model_state_dict"])
 
         if optimizer is not None and "optimizer_state_dict" in checkpoint:
@@ -400,6 +412,37 @@ class CheckpointCallback:
             scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
         return checkpoint
+
+    def _check_config_compatibility(self, checkpoint_config: dict) -> None:
+        """Check if checkpoint config matches current config.
+
+        Raises warning if critical parameters differ.
+        """
+        critical_keys = [
+            "d_state", "d_conv", "mamba_expand", "ff_expand",
+            "stacks", "conv_channels", "input_dim"
+        ]
+
+        mismatches = []
+        for key in critical_keys:
+            ckpt_val = checkpoint_config.get(key)
+            curr_val = self.model_config.get(key)
+
+            if ckpt_val != curr_val and ckpt_val is not None:
+                mismatches.append(f"  {key}: checkpoint={ckpt_val}, current={curr_val}")
+
+        if mismatches:
+            import warnings
+            msg = (
+                f"\n{'='*60}\n"
+                f"WARNING: Model config mismatch detected!\n"
+                f"The checkpoint was created with different model parameters.\n"
+                f"This will likely cause load errors or incorrect results.\n\n"
+                f"Mismatched parameters:\n" + "\n".join(mismatches) + "\n"
+                f"\nUse the same config that was used to create this checkpoint.\n"
+                f"{'='*60}\n"
+            )
+            warnings.warn(msg)
 
     def get_best_checkpoint(self) -> Optional[Path]:
         """Get path to the best checkpoint."""

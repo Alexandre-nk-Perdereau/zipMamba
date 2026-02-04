@@ -79,6 +79,8 @@ class Trainer:
         aug_warmup_epochs: int = 5,
         # Callbacks for augmentation control
         set_augmentation_prob_fn: Optional[callable] = None,
+        # Model config for checkpoint compatibility
+        model_config: Optional[dict] = None,
     ):
         """Initialize Trainer.
 
@@ -109,6 +111,7 @@ class Trainer:
             aug_start_epoch: Epoch to start applying augmentations.
             aug_warmup_epochs: Epochs to ramp up augmentation probability.
             set_augmentation_prob_fn: Callback to set augmentation probability.
+            model_config: Model configuration dict for checkpoint compatibility.
         """
         self.model = model
         self.train_dataloader = train_dataloader
@@ -186,6 +189,7 @@ class Trainer:
             metric_name=checkpoint_metric,
             mode=checkpoint_mode,
             run_name=run_name,
+            model_config=model_config,
         )
 
         # Training state
