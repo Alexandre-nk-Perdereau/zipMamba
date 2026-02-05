@@ -232,6 +232,8 @@ class EfficientASREncoder(nn.Module):
                         skip = self.skip_projs[key](skip)
                     min_len = min(x.shape[1], skip.shape[1])
                     x = x[:, :min_len, :] + skip[:, :min_len, :]
+                    if x_lengths is not None:
+                        x_lengths = x_lengths.clamp(max=min_len)
 
             stack_input = x
             for block in self.stacks[i]:
@@ -253,6 +255,8 @@ class EfficientASREncoder(nn.Module):
                 skip = self.remaining_skip_proj(skip)
             min_len = min(x.shape[1], skip.shape[1])
             x = x[:, :min_len, :] + skip[:, :min_len, :]
+            if x_lengths is not None:
+                x_lengths = x_lengths.clamp(max=min_len)
 
         # Final layer norm for stability
         x = self.final_ln(x)
