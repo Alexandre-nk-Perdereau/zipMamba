@@ -1,16 +1,16 @@
 data:
   train_manifest:
-    - /workspace/data/en/train.tsv
-    - /workspace/data/fr/train.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/en/train.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/train.tsv
   dev_manifest:
-    - /workspace/data/en/dev.tsv
-    - /workspace/data/fr/dev.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/en/dev.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/dev.tsv
   test_manifest:
-    - /workspace/data/en/test.tsv
-    - /workspace/data/fr/test.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/en/test.tsv
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/test.tsv
   clips_dir:
-    - /workspace/data/en/clips
-    - /workspace/data/fr/clips
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/en/clips
+    - /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/clips
 
   sample_rate: 16000
   n_mels: 80

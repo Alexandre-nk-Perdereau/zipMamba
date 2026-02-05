@@ -1,8 +1,8 @@
 data:
-  train_manifest: /workspace/data/fr/train.tsv
-  dev_manifest: /workspace/data/fr/dev.tsv
-  test_manifest: /workspace/data/fr/test.tsv
-  clips_dir: /workspace/data/fr/clips
+  train_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/train.tsv
+  dev_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/dev.tsv
+  test_manifest: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/test.tsv
+  clips_dir: /home/rouge/repoD/data/cv-corpus-24.0-2025-12-05/fr/clips
 
   sample_rate: 16000
   n_mels: 80
