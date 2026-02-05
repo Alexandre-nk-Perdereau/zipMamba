@@ -32,14 +32,23 @@ class Downsample(nn.Module):
 
 
 class Upsample(nn.Module):
-    """Frame repetition. (batch, time, dim) → (batch, time*factor, dim)"""
+    """Learnable upsampling. (batch, time, dim) → (batch, time*factor, dim)
 
-    def __init__(self, factor: int = 2):
+    Each input frame is projected to `factor` output frames via a learned
+    linear layer, giving each upsampled frame its own representation.
+    Falls back to frame repetition if dim is not provided.
+    """
+
+    def __init__(self, factor: int = 2, dim: int | None = None):
         super().__init__()
         self.factor = factor
+        self.proj = nn.Linear(dim, dim * factor) if dim is not None else None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch, time, dim = x.shape
+        if self.proj is not None:
+            x = self.proj(x)  # (B, T, D*factor)
+            return x.reshape(batch, time * self.factor, dim)
         x = x.unsqueeze(2).repeat(1, 1, self.factor, 1)
         return x.reshape(batch, time * self.factor, dim)
 

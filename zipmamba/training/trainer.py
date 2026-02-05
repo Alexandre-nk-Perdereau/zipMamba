@@ -436,64 +436,20 @@ class Trainer:
         tokens: torch.Tensor,
         token_lengths: torch.Tensor,
     ) -> tuple[torch.Tensor, float, dict]:
-        """Compute CTC loss and average blank probability.
+        """Compute CTC loss and average blank probability in a single forward pass.
 
         Returns:
             Tuple of (loss, blank_probability, loss_dict).
         """
-        if (
-            hasattr(self.model, "use_intermediate_ctc")
-            and self.model.use_intermediate_ctc
-        ):
-            loss, loss_dict = self.model.compute_loss(
-                mel, mel_lengths, tokens, token_lengths
-            )
-
-            with torch.no_grad():
-                logits, _ = self.model(mel, mel_lengths)
-                log_probs = F.log_softmax(logits, dim=-1)
-                probs = torch.exp(log_probs)
-                blank_prob = probs[:, :, 0].mean().item()
-
-            return loss, blank_prob, loss_dict
-
-        logits, out_lengths = self.model(mel, mel_lengths)
-        log_probs = F.log_softmax(logits, dim=-1)
-
-        # Compute blank probability for monitoring
-        with torch.no_grad():
-            probs = torch.exp(log_probs)
-            blank_prob = probs[:, :, 0].mean().item()
-
-        log_probs_t = log_probs.transpose(0, 1)  # (T, B, C) for CTC
-
-        # Filter invalid samples
-        max_time = log_probs_t.shape[0]
-        valid_mask = (out_lengths >= token_lengths) & (out_lengths <= max_time)
-        if not valid_mask.all():
-            valid_indices = valid_mask.nonzero(as_tuple=True)[0]
-            if len(valid_indices) == 0:
-                return (
-                    torch.tensor(0.0, device=mel.device, requires_grad=True),
-                    blank_prob,
-                    {"main": 0.0},
-                )
-            log_probs_t = log_probs_t[:, valid_indices, :]
-            out_lengths = out_lengths[valid_indices]
-            tokens = tokens[valid_indices]
-            token_lengths = token_lengths[valid_indices]
-
-        loss = F.ctc_loss(
-            log_probs_t,
-            tokens,
-            out_lengths,
-            token_lengths,
-            blank=0,
-            reduction="mean",
-            zero_infinity=True,
+        loss, loss_dict, logits = self.model.compute_loss(
+            mel, mel_lengths, tokens, token_lengths
         )
 
-        return loss, blank_prob, {"main": loss}
+        with torch.no_grad():
+            log_probs = F.log_softmax(logits, dim=-1)
+            blank_prob = log_probs[:, :, 0].exp().mean().item()
+
+        return loss, blank_prob, loss_dict
 
     @torch.no_grad()
     def _validate(self) -> dict:

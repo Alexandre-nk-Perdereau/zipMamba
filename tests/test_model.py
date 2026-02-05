@@ -43,7 +43,7 @@ class TestSampling:
         assert out.shape == (2, 100, 256)
 
     def test_bypass_same_dim(self):
-        bypass = Bypass(dim=256)
+        bypass = Bypass(dim_in=256)
         x_in = torch.randn(2, 100, 256)
         x_out = torch.randn(2, 100, 256)
         out = bypass(x_in, x_out)
@@ -97,7 +97,7 @@ class TestEncoder:
         x = torch.randn(2, 800, 80).cuda()
         lengths = torch.tensor([800, 600]).cuda()
 
-        out, out_lengths = encoder(x, lengths)
+        out, out_lengths, _ = encoder(x, lengths)
 
         assert out.shape[0] == 2
         assert out.shape[2] == encoder.output_dim
@@ -127,10 +127,12 @@ class TestEncoder:
         targets = torch.randint(1, 100, (2, 20)).cuda()
         target_lengths = torch.tensor([20, 15]).cuda()
 
-        loss = model.compute_loss(x, x_lengths, targets, target_lengths)
+        loss, loss_dict, logits = model.compute_loss(x, x_lengths, targets, target_lengths)
 
         assert loss.dim() == 0  # scalar
         assert loss.item() > 0
+        assert logits.shape[0] == 2
+        assert logits.shape[2] == 1000
 
     @requires_cuda
     def test_greedy_decode(self):

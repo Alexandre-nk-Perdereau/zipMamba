@@ -117,7 +117,7 @@ class EfficientASREncoder(nn.Module):
                 self.downsamples.append(None)
 
             if cfg.get("upsample"):
-                self.upsamples.append(Upsample(cfg["upsample"]))
+                self.upsamples.append(Upsample(cfg["upsample"], dim=dim))
             else:
                 self.upsamples.append(None)
 
@@ -138,6 +138,25 @@ class EfficientASREncoder(nn.Module):
                         skip_dim, current_dim
                     )
                 skip_idx -= 1
+
+        # Handle unused encoder skip from first stack (highest resolution)
+        n_decoder_upsamples = sum(
+            1 for cfg in stack_config[mid_point:] if cfg.get("upsample")
+        )
+        self._n_unused_skips = mid_point - n_decoder_upsamples
+
+        if self._n_unused_skips > 0:
+            skip_dim = stack_config[0]["dim"]
+            skip_ds = stack_config[0].get("downsample", 1)
+            self.remaining_skip_ds = Downsample(skip_ds) if skip_ds > 1 else None
+            self.remaining_skip_proj = (
+                nn.Linear(skip_dim, stack_config[-1]["dim"])
+                if skip_dim != stack_config[-1]["dim"]
+                else None
+            )
+        else:
+            self.remaining_skip_ds = None
+            self.remaining_skip_proj = None
 
         self._output_dim = stack_config[-1]["dim"]
         self._n_stacks = n_stacks
@@ -179,12 +198,12 @@ class EfficientASREncoder(nn.Module):
         # Encoder path
         for i in range(mid_point):
             x = self.dim_projs[i](x)
-            skip_connections.append(x)
             stack_input = x
 
             for block in self.stacks[i]:
                 x = block(x)
             x = self.bypasses[i](stack_input, x)
+            skip_connections.append(x)
 
             if return_intermediates and i == 1:
                 intermediates[f"stack_{i}"] = (
@@ -224,6 +243,16 @@ class EfficientASREncoder(nn.Module):
                     x.clone(),
                     x_lengths.clone() if x_lengths is not None else None,
                 )
+
+        # Use remaining encoder skip (from first stack, highest resolution)
+        if skip_connections and self._n_unused_skips > 0:
+            skip = skip_connections[0]
+            if self.remaining_skip_ds is not None:
+                skip = self.remaining_skip_ds(skip)
+            if self.remaining_skip_proj is not None:
+                skip = self.remaining_skip_proj(skip)
+            min_len = min(x.shape[1], skip.shape[1])
+            x = x[:, :min_len, :] + skip[:, :min_len, :]
 
         # Final layer norm for stability
         x = self.final_ln(x)
@@ -329,11 +358,11 @@ class EfficientASRModel(nn.Module):
         x_lengths: torch.Tensor,
         targets: torch.Tensor,
         target_lengths: torch.Tensor,
-    ) -> tuple[torch.Tensor, dict]:
+    ) -> tuple[torch.Tensor, dict, torch.Tensor]:
         """Compute CTC loss with optional intermediate losses.
 
         Returns:
-            Tuple of (total_loss, loss_dict with individual losses).
+            Tuple of (total_loss, loss_dict with individual losses, logits).
         """
         if self.use_intermediate_ctc and self.training:
             logits, out_lengths, intermediate_logits = self.forward_with_intermediates(
@@ -352,7 +381,7 @@ class EfficientASRModel(nn.Module):
             valid_indices = valid_mask.nonzero(as_tuple=True)[0]
             if len(valid_indices) == 0:
                 zero_loss = torch.tensor(0.0, device=x.device, requires_grad=True)
-                return zero_loss, {"main": zero_loss}
+                return zero_loss, {"main": zero_loss}, logits
             log_probs = log_probs[:, valid_indices, :]
             out_lengths = out_lengths[valid_indices]
             targets_filtered = targets[valid_indices]
@@ -413,7 +442,7 @@ class EfficientASRModel(nn.Module):
                 loss_dict[name] = inter_loss
                 total_loss = total_loss + self.intermediate_ctc_weight * inter_loss
 
-        return total_loss, loss_dict
+        return total_loss, loss_dict, logits
 
     @torch.no_grad()
     def decode_greedy(

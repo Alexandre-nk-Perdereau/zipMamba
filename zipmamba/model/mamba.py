@@ -16,8 +16,10 @@ except ImportError as e:
 
 
 class BiMambaBlock(nn.Module):
-    """Bidirectional Mamba: forward + backward SSM, averaged. O(n) complexity.
+    """Bidirectional Mamba: forward + backward SSM, concatenated + projected. O(n) complexity.
 
+    Uses concatenation and a learned projection instead of simple averaging,
+    allowing the model to learn how to combine directional information.
     Uses BiasNorm instead of LayerNorm for better preservation of length
     information during normalization.
     """
@@ -38,10 +40,11 @@ class BiMambaBlock(nn.Module):
         self.mamba_backward = Mamba(
             d_model=dim, d_state=d_state, d_conv=d_conv, expand=expand
         )
+        self.out_proj = nn.Linear(dim * 2, dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm(x)
         y_fwd = self.mamba_forward(x)
         y_bwd = torch.flip(self.mamba_backward(torch.flip(x, [1])), [1])
-        return self.dropout((y_fwd + y_bwd) / 2)
+        return self.dropout(self.out_proj(torch.cat([y_fwd, y_bwd], dim=-1)))
