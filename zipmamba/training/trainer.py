@@ -153,7 +153,9 @@ class Trainer:
             )
 
         # Compute steps per epoch for LR scheduler
-        self.steps_per_epoch = len(train_dataloader) // gradient_accumulation_steps
+        self.steps_per_epoch = (
+            len(train_dataloader) + gradient_accumulation_steps - 1
+        ) // gradient_accumulation_steps
 
         # Step-based scheduler (configured in epochs for convenience)
         self.scheduler = create_scheduler(
@@ -310,11 +312,13 @@ class Trainer:
             Dictionary with training metrics.
         """
         self.model.train()
+        self.optimizer.zero_grad(set_to_none=True)
 
         total_loss = 0.0
         total_blank_prob = 0.0
         num_batches = 0
         accumulated_loss = 0.0
+        num_train_batches = len(self.train_dataloader)
 
         with Progress(
             SpinnerColumn(),
@@ -332,7 +336,7 @@ class Trainer:
         ) as progress:
             task = progress.add_task(
                 f"Epoch {self.current_epoch}",
-                total=len(self.train_dataloader),
+                total=num_train_batches,
                 loss=0.0,
                 blank_prob=0.0,
             )
@@ -350,15 +354,23 @@ class Trainer:
                         loss, blank_prob, _ = self._compute_loss_with_blank_prob(
                             mel, mel_lengths, tokens, token_lengths
                         )
-                        loss = loss / self.gradient_accumulation_steps
                 else:
                     loss, blank_prob, _ = self._compute_loss_with_blank_prob(
                         mel, mel_lengths, tokens, token_lengths
                     )
-                    loss = loss / self.gradient_accumulation_steps
+
+                group_start = (
+                    batch_idx // self.gradient_accumulation_steps
+                ) * self.gradient_accumulation_steps
+                current_accum_steps = min(
+                    self.gradient_accumulation_steps,
+                    num_train_batches - group_start,
+                )
+                raw_loss = loss.item()
+                loss = loss / current_accum_steps
 
                 accumulated_loss += loss.item()
-                total_loss += loss.item() * self.gradient_accumulation_steps
+                total_loss += raw_loss
                 total_blank_prob += blank_prob
                 num_batches += 1
 
@@ -369,7 +381,9 @@ class Trainer:
                     loss.backward()
 
                 # Gradient accumulation step
-                if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
+                is_accum_boundary = (batch_idx + 1) % self.gradient_accumulation_steps == 0
+                is_last_batch = (batch_idx + 1) == num_train_batches
+                if is_accum_boundary or is_last_batch:
                     # Gradient clipping
                     if self.scaler is not None:
                         self.scaler.unscale_(self.optimizer)
@@ -420,7 +434,7 @@ class Trainer:
                 )
 
                 # Reset accumulated loss after logging
-                if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
+                if is_accum_boundary or is_last_batch:
                     accumulated_loss = 0.0
 
         avg_loss = total_loss / max(1, num_batches)

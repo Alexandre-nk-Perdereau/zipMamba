@@ -4,6 +4,7 @@ Uses BiasNorm and Swoosh activations for improved training stability and perform
 Reference: "Zipformer: A faster and better encoder for ASR" (ICLR 2024)
 """
 
+from fractions import Fraction
 from typing import Optional
 
 import torch
@@ -145,18 +146,43 @@ class EfficientASREncoder(nn.Module):
         )
         self._n_unused_skips = mid_point - n_decoder_upsamples
 
+        self.remaining_skip_resamplers = nn.ModuleList()
+        self.remaining_skip_projs = nn.ModuleList()
         if self._n_unused_skips > 0:
-            skip_dim = stack_config[0]["dim"]
-            skip_ds = stack_config[0].get("downsample", 1)
-            self.remaining_skip_ds = Downsample(skip_ds) if skip_ds > 1 else None
-            self.remaining_skip_proj = (
-                nn.Linear(skip_dim, stack_config[-1]["dim"])
-                if skip_dim != stack_config[-1]["dim"]
-                else None
-            )
-        else:
-            self.remaining_skip_ds = None
-            self.remaining_skip_proj = None
+            stack_output_strides: list[Fraction] = []
+            stride = Fraction(1, 1)
+            for i in range(mid_point):
+                stack_output_strides.append(stride)
+                down = stack_config[i].get("downsample")
+                if down:
+                    stride *= down
+            for i in range(mid_point, n_stacks):
+                up = stack_config[i].get("upsample")
+                if up:
+                    stride /= up
+                stack_output_strides.append(stride)
+
+            final_stride = stack_output_strides[-1]
+            final_dim = stack_config[-1]["dim"]
+
+            for skip_idx in range(self._n_unused_skips):
+                skip_dim = stack_config[skip_idx]["dim"]
+                skip_stride = stack_output_strides[skip_idx]
+                ratio = final_stride / skip_stride
+
+                if ratio.denominator == 1 and ratio.numerator > 1:
+                    resampler: nn.Module = Downsample(ratio.numerator)
+                elif ratio.numerator == 1 and ratio.denominator > 1:
+                    resampler = Upsample(ratio.denominator, dim=skip_dim)
+                else:
+                    resampler = nn.Identity()
+
+                self.remaining_skip_resamplers.append(resampler)
+                self.remaining_skip_projs.append(
+                    nn.Linear(skip_dim, final_dim)
+                    if skip_dim != final_dim
+                    else nn.Identity()
+                )
 
         self._output_dim = stack_config[-1]["dim"]
         self._n_stacks = n_stacks
@@ -248,15 +274,17 @@ class EfficientASREncoder(nn.Module):
 
         # Use remaining encoder skip (from first stack, highest resolution)
         if skip_connections and self._n_unused_skips > 0:
-            skip = skip_connections[0]
-            if self.remaining_skip_ds is not None:
-                skip = self.remaining_skip_ds(skip)
-            if self.remaining_skip_proj is not None:
-                skip = self.remaining_skip_proj(skip)
-            min_len = min(x.shape[1], skip.shape[1])
-            x = x[:, :min_len, :] + skip[:, :min_len, :]
-            if x_lengths is not None:
-                x_lengths = x_lengths.clamp(max=min_len)
+            for skip, skip_resampler, skip_proj in zip(
+                skip_connections[: self._n_unused_skips],
+                self.remaining_skip_resamplers,
+                self.remaining_skip_projs,
+            ):
+                skip = skip_resampler(skip)
+                skip = skip_proj(skip)
+                min_len = min(x.shape[1], skip.shape[1])
+                x = x[:, :min_len, :] + skip[:, :min_len, :]
+                if x_lengths is not None:
+                    x_lengths = x_lengths.clamp(max=min_len)
 
         # Final layer norm for stability
         x = self.final_ln(x)
