@@ -1,6 +1,15 @@
 """ASR evaluation metrics: WER and CER."""
 
+import re
 from typing import Optional
+
+
+def normalize_text(text: str) -> str:
+    """Normalize text by removing all characters that are not letters, digits or spaces."""
+    text = text.strip().lower()
+    text = re.sub(r"[^\w\s]|_", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def _levenshtein_distance(ref: list, hyp: list) -> int:
@@ -127,6 +136,26 @@ def compute_cer(
     return cer
 
 
+def compute_wer_normalized(
+    references: list[str],
+    hypotheses: list[str],
+) -> float:
+    """Compute WER after stripping punctuation and special characters."""
+    refs = [normalize_text(r) for r in references]
+    hyps = [normalize_text(h) for h in hypotheses]
+    return compute_wer(refs, hyps)
+
+
+def compute_cer_normalized(
+    references: list[str],
+    hypotheses: list[str],
+) -> float:
+    """Compute CER after stripping punctuation and special characters."""
+    refs = [normalize_text(r) for r in references]
+    hyps = [normalize_text(h) for h in hypotheses]
+    return compute_cer(refs, hyps)
+
+
 def compute_metrics(
     references: list[str],
     hypotheses: list[str],
@@ -138,9 +167,11 @@ def compute_metrics(
         hypotheses: List of hypothesis transcripts.
 
     Returns:
-        Dict with WER and CER.
+        Dict with WER, CER, and their normalized variants.
     """
     return {
         "wer": compute_wer(references, hypotheses),
         "cer": compute_cer(references, hypotheses),
+        "wer_norm": compute_wer_normalized(references, hypotheses),
+        "cer_norm": compute_cer_normalized(references, hypotheses),
     }

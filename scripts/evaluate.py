@@ -14,7 +14,7 @@ from zipmamba.model.encoder import EfficientASRModel
 from zipmamba.data.audio import AudioProcessor
 from zipmamba.data.tokenizer import Tokenizer
 from zipmamba.data.dataset import create_dataloader
-from zipmamba.utils.metrics import compute_wer, compute_cer
+from zipmamba.utils.metrics import compute_wer, compute_cer, compute_wer_normalized, compute_cer_normalized
 
 console = Console()
 
@@ -182,6 +182,8 @@ def main():
 
     wer = compute_wer(all_references, all_hypotheses)
     cer = compute_cer(all_references, all_hypotheses)
+    wer_norm = compute_wer_normalized(all_references, all_hypotheses)
+    cer_norm = compute_cer_normalized(all_references, all_hypotheses)
 
     rtf = (
         total_inference_time / total_audio_duration if total_audio_duration > 0 else 0.0
@@ -193,6 +195,8 @@ def main():
 
     table.add_row("WER", f"{wer * 100:.2f}%")
     table.add_row("CER", f"{cer * 100:.2f}%")
+    table.add_row("WER (normalized)", f"{wer_norm * 100:.2f}%")
+    table.add_row("CER (normalized)", f"{cer_norm * 100:.2f}%")
     table.add_row("RTF", f"{rtf:.4f}")
     table.add_row("Samples", str(len(all_references)))
     table.add_row("Audio duration", f"{total_audio_duration:.1f}s")
@@ -216,6 +220,8 @@ def main():
             "metrics": {
                 "wer": wer,
                 "cer": cer,
+                "wer_norm": wer_norm,
+                "cer_norm": cer_norm,
                 "rtf": rtf,
                 "samples": len(all_references),
                 "audio_duration_s": total_audio_duration,
