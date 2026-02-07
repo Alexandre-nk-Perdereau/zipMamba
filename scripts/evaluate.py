@@ -1,6 +1,7 @@
 """Evaluation script for ZipMamba ASR model."""
 
 import argparse
+import csv
 import time
 from pathlib import Path
 
@@ -103,6 +104,14 @@ def main():
 
     console.print(f"Evaluating on {len(dataloader.dataset)} samples")
 
+    manifest_meta = {}
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            manifest_meta[row["path"]] = {
+                "down_votes": int(row.get("down_votes", 0)),
+                "up_votes": int(row.get("up_votes", 0)),
+            }
+
     console.print("[bold]Loading model...[/bold]")
 
     stack_config = None
@@ -150,6 +159,7 @@ def main():
     all_references = []
     all_hypotheses = []
     all_predictions = []
+    all_down_votes = []
 
     total_inference_time = 0.0
     total_audio_duration = 0.0
@@ -161,6 +171,7 @@ def main():
             mel = batch["mel"].to(device)
             mel_lengths = batch["mel_lengths"].to(device)
             texts = batch["texts"]
+            audio_paths = batch["audio_paths"]
 
             if batch_idx == 0:
                 _ = model.decode_greedy(mel, mel_lengths)
@@ -189,8 +200,12 @@ def main():
             all_references.extend(texts)
             all_hypotheses.extend(hypotheses)
 
-            for ref, hyp in zip(texts, hypotheses):
-                all_predictions.append({"reference": ref, "hypothesis": hyp})
+            for ref, hyp, ap in zip(texts, hypotheses, audio_paths):
+                filename = Path(ap).name
+                meta = manifest_meta.get(filename, {})
+                dv = meta.get("down_votes", 0)
+                all_down_votes.append(dv)
+                all_predictions.append({"reference": ref, "hypothesis": hyp, "down_votes": dv})
 
     wer = compute_wer(all_references, all_hypotheses)
     cer = compute_cer(all_references, all_hypotheses)
@@ -215,6 +230,35 @@ def main():
     table.add_row("Inference time", f"{total_inference_time:.1f}s")
 
     console.print(table)
+
+    groups = {
+        "down_votes == 0": [i for i, dv in enumerate(all_down_votes) if dv == 0],
+        "down_votes > 0": [i for i, dv in enumerate(all_down_votes) if dv > 0],
+    }
+
+    group_table = Table(title="Breakdown by down_votes")
+    group_table.add_column("Group", style="cyan")
+    group_table.add_column("N", style="white")
+    group_table.add_column("WER", style="green")
+    group_table.add_column("CER", style="green")
+    group_table.add_column("WER norm.", style="green")
+    group_table.add_column("CER norm.", style="green")
+
+    for group_name, indices in groups.items():
+        if not indices:
+            continue
+        g_refs = [all_references[i] for i in indices]
+        g_hyps = [all_hypotheses[i] for i in indices]
+        group_table.add_row(
+            group_name,
+            str(len(indices)),
+            f"{compute_wer(g_refs, g_hyps) * 100:.2f}%",
+            f"{compute_cer(g_refs, g_hyps) * 100:.2f}%",
+            f"{compute_wer_normalized(g_refs, g_hyps) * 100:.2f}%",
+            f"{compute_cer_normalized(g_refs, g_hyps) * 100:.2f}%",
+        )
+
+    console.print(group_table)
 
     console.print("\n[bold]Sample predictions:[/bold]")
     for i in range(min(5, len(all_predictions))):

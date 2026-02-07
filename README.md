@@ -143,6 +143,15 @@ stacks:
 |-------|---------|---------|---------------|---------------|-----|
 | Small (~35M) | 20.72 | 8.37 | 17.43 | 7.78 | 0.0002 |
 
+#### Breakdown by validation quality
+
+> Common Voice clips are community-validated: `down_votes` counts reviewers who flagged the audio as not matching the text. ~19% of the test set has `down_votes > 0`.
+
+| Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
+|--------|------|---------|---------|---------------|---------------|
+| down_votes == 0 | 13097 | 18.88 | 7.30 | 15.59 | 6.71 |
+| down_votes > 0 | 3099 | 28.40 | 12.83 | 25.08 | 12.21 |
+
 ### English (Common Voice EN)
 
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
