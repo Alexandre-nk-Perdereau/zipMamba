@@ -127,7 +127,19 @@ def main():
     )
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
-    model.load_state_dict(checkpoint["model_state_dict"])
+
+    # Handle renamed keys from older checkpoints
+    state_dict = checkpoint["model_state_dict"]
+    key_mapping = {
+        "encoder.remaining_skip_ds.weights": "encoder.remaining_skip_resamplers.0.weights",
+        "encoder.remaining_skip_proj.weight": "encoder.remaining_skip_projs.0.weight",
+        "encoder.remaining_skip_proj.bias": "encoder.remaining_skip_projs.0.bias",
+    }
+    for old_key, new_key in key_mapping.items():
+        if old_key in state_dict and new_key not in state_dict:
+            state_dict[new_key] = state_dict.pop(old_key)
+
+    model.load_state_dict(state_dict)
     model = model.to(device)
     model.eval()
 

@@ -117,7 +117,7 @@ uv run scripts/transcribe.py \
 
 | Model | Parameters | Stack Dimensions |
 |-------|------------|------------------|
-| `small.yaml` | ~30M | 128, 192, 256, 320, 256, 192 |
+| `small.yaml` | ~35M | 128, 192, 256, 320, 256, 192 |
 | `medium.yaml` | ~83M | 192, 256, 384, 512, 384, 256 |
 
 ### Small Model Configuration
@@ -134,30 +134,26 @@ stacks:
 
 ## Performance
 
-> Results on Common Voice (test split). 
+> Results on Common Voice (test split), greedy CTC decoding.
+> "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
 
 ### French (Common Voice FR)
 
-| Model | WER (%) | CER (%) | RTF |
-|-------|---------|---------|-----|
-| Small (~30M) | 22.28 | 9.31 | 0.0002 |
-| Medium (~83M) | 21.95 | 8.99 | 0.0003 |
-
-> Note: The minimal improvement from Small to Medium is surprising given the 3x parameter increase. More investigations are needed.
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
+|-------|---------|---------|---------------|---------------|-----|
+| Small (~35M) | 20.72 | 8.37 | 17.43 | 7.78 | 0.0002 |
 
 ### English (Common Voice EN)
 
-| Model | WER (%) | CER (%) | RTF |
-|-------|---------|---------|-----|
-| Small (~30M) | - | - | - |
-| Medium (~83M) | - | - | - |
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
+|-------|---------|---------|---------------|---------------|-----|
+| Small (~35M) | - | - | - | - | - |
 
 ### French + English (Common Voice FR+EN)
 
-| Model | WER (%) | CER (%) | RTF |
-|-------|---------|---------|-----|
-| Small (~30M) | - | - | - |
-| Medium (~83M) | - | - | - |
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
+|-------|---------|---------|---------------|---------------|-----|
+| Small (~35M) | - | - | - | - | - |
 
 ### Training Progress
 

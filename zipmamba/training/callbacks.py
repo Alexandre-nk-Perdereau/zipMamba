@@ -225,8 +225,8 @@ class CheckpointCallback:
         self.metric_name = metric_name
         self.mode = mode
 
-        # Track top-k checkpoints: list of (metric_value, step, path)
-        self._top_checkpoints: list[tuple[float, int, Path]] = []
+        # Track top-k checkpoints: list of (metric_value, step, path, epoch)
+        self._top_checkpoints: list[tuple[float, int, Path, int]] = []
 
         # Load existing state if resuming
         self._load_checkpoint_state()
@@ -238,7 +238,7 @@ class CheckpointCallback:
             with open(state_path, "r") as f:
                 state = json.load(f)
                 self._top_checkpoints = [
-                    (c["metric"], c["step"], Path(c["path"]))
+                    (c["metric"], c["step"], Path(c["path"]), c.get("epoch", 0))
                     for c in state.get("top_checkpoints", [])
                     if Path(c["path"]).exists()
                 ]
@@ -250,8 +250,8 @@ class CheckpointCallback:
             "metric_name": self.metric_name,
             "mode": self.mode,
             "top_checkpoints": [
-                {"metric": m, "step": s, "path": str(p)}
-                for m, s, p in self._top_checkpoints
+                {"metric": m, "step": s, "path": str(p), "epoch": e}
+                for m, s, p, e in self._top_checkpoints
             ],
         }
         with open(state_path, "w") as f:
@@ -361,7 +361,8 @@ class CheckpointCallback:
         torch.save(state, checkpoint_path)
 
         # Add to top-k
-        self._top_checkpoints.append((metric_value, step, checkpoint_path))
+        epoch = extra_state.get("epoch", 0) if extra_state else 0
+        self._top_checkpoints.append((metric_value, step, checkpoint_path, epoch))
 
         # Sort and remove worst if over limit
         if self.mode == "min":
@@ -371,7 +372,7 @@ class CheckpointCallback:
 
         # Remove worst checkpoints
         while len(self._top_checkpoints) > self.keep_top_k:
-            _, _, old_path = self._top_checkpoints.pop()
+            _, _, old_path, _ = self._top_checkpoints.pop()
             if old_path.exists():
                 old_path.unlink()
 
@@ -458,6 +459,6 @@ class CheckpointCallback:
     def get_top_k_info(self) -> list[dict]:
         """Get info about top-k checkpoints."""
         return [
-            {"metric": m, "step": s, "path": str(p)}
-            for m, s, p in self._top_checkpoints
+            {"metric": m, "step": s, "path": str(p), "epoch": e}
+            for m, s, p, e in self._top_checkpoints
         ]
