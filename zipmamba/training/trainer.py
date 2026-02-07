@@ -74,6 +74,9 @@ class Trainer:
         resume_from: Optional[str] = None,
         sample_rate: int = 16000,
         n_audio_samples: int = 5,
+        min_lr: float = 0.0,
+        # Early stopping
+        early_stopping_patience: Optional[int] = None,
         # Augmentation schedule
         aug_start_epoch: int = 5,
         aug_warmup_epochs: int = 5,
@@ -126,6 +129,11 @@ class Trainer:
         self.n_audio_samples = n_audio_samples
         self.log_every_n_steps = log_every_n_steps
 
+        # Early stopping
+        self.early_stopping_patience = early_stopping_patience
+        self._best_val_loss = float("inf")
+        self._patience_counter = 0
+
         # Augmentation schedule
         self.aug_start_epoch = aug_start_epoch
         self.aug_warmup_epochs = aug_warmup_epochs
@@ -163,6 +171,7 @@ class Trainer:
             warmup_epochs=warmup_epochs,
             max_epochs=max_epochs,
             steps_per_epoch=self.steps_per_epoch,
+            min_lr=min_lr,
         )
 
         # Mixed precision
@@ -254,6 +263,7 @@ class Trainer:
             train_metrics = self._train_epoch()
 
             # Validation
+            val_metrics = None
             if self.val_dataloader is not None:
                 val_metrics = self._validate()
 
@@ -279,6 +289,31 @@ class Trainer:
                     console.print(
                         f"[green]Saved new top-k checkpoint: {saved_path.name}[/green]"
                     )
+
+            # Early stopping check
+            if self.early_stopping_patience is not None and val_metrics is not None:
+                val_loss = val_metrics["loss"]
+                if val_loss is not None:
+                    if val_loss < self._best_val_loss:
+                        self._best_val_loss = val_loss
+                        self._patience_counter = 0
+                    else:
+                        self._patience_counter += 1
+                        if self._patience_counter >= self.early_stopping_patience:
+                            console.print(
+                                f"[bold yellow]Early stopping triggered after "
+                                f"{self.early_stopping_patience} epochs without "
+                                f"val_loss improvement (best: {self._best_val_loss:.4f})[/bold yellow]"
+                            )
+                            # Save last checkpoint before stopping
+                            self.checkpointer.save_last(
+                                model=self.model,
+                                optimizer=self.optimizer,
+                                scheduler=self.scheduler,
+                                step=self.global_step,
+                                extra_state={"epoch": self.current_epoch},
+                            )
+                            break
 
             # Always save last.pt for resuming
             self.checkpointer.save_last(

@@ -251,6 +251,9 @@ class AudioAugmentation:
     - Gaussian noise injection
     - Speed perturbation
     - Silence insertion
+    - Gain/volume perturbation
+    - Pitch shift
+    - Codec/MP3 compression simulation
     """
 
     def __init__(
@@ -263,21 +266,20 @@ class AudioAugmentation:
         speed_rates: Optional[list[float]] = None,
         silence_enabled: bool = True,
         silence_config: Optional[dict] = None,
+        gain_enabled: bool = False,
+        gain_min_db: float = -6.0,
+        gain_max_db: float = 6.0,
+        gain_prob: float = 0.5,
+        pitch_shift_enabled: bool = False,
+        pitch_min_semitones: float = -2.0,
+        pitch_max_semitones: float = 2.0,
+        pitch_prob: float = 0.3,
+        codec_enabled: bool = False,
+        codec_min_bitrate: int = 32,
+        codec_max_bitrate: int = 128,
+        codec_prob: float = 0.3,
         sample_rate: int = 16000,
     ):
-        """Initialize AudioAugmentation.
-
-        Args:
-            noise_enabled: Whether to enable noise injection.
-            min_snr_db: Minimum SNR in dB for noise.
-            max_snr_db: Maximum SNR in dB for noise.
-            noise_prob: Probability of adding noise.
-            speed_perturb_enabled: Whether to enable speed perturbation.
-            speed_rates: Speed perturbation rates (default: [0.9, 1.0, 1.1]).
-            silence_enabled: Whether to enable silence insertion.
-            silence_config: Config for SilenceAugmentation.
-            sample_rate: Audio sample rate.
-        """
         import torchaudio.transforms as T
 
         self.noise_enabled = noise_enabled
@@ -289,6 +291,31 @@ class AudioAugmentation:
         self.silence_enabled = silence_enabled
         self.sample_rate = sample_rate
         self._prob_multiplier = 1.0
+
+        # Gain
+        self.gain_enabled = gain_enabled
+        self.gain_min_db = gain_min_db
+        self.gain_max_db = gain_max_db
+        self.gain_prob = gain_prob
+
+        # Pitch shift
+        self.pitch_shift_enabled = pitch_shift_enabled
+        self.pitch_min_semitones = pitch_min_semitones
+        self.pitch_max_semitones = pitch_max_semitones
+        self.pitch_prob = pitch_prob
+
+        # Codec simulation
+        self.codec_enabled = codec_enabled
+        self.codec_min_bitrate = codec_min_bitrate
+        self.codec_max_bitrate = codec_max_bitrate
+        self.codec_prob = codec_prob
+        self.codec_transform = None
+        if AUDIOMENTATIONS_AVAILABLE and codec_enabled:
+            self.codec_transform = am.Mp3Compression(
+                min_bitrate=codec_min_bitrate,
+                max_bitrate=codec_max_bitrate,
+                p=1.0,  # probability handled externally
+            )
 
         # Pre-create resamplers for speed perturbation (avoid creating per sample)
         self._resamplers = {}
@@ -357,6 +384,18 @@ class AudioAugmentation:
             if speed != 1.0:
                 waveform = self._speed_perturb(waveform, speed)
 
+        # Gain perturbation
+        if self.gain_enabled and random.random() < self.gain_prob * self._prob_multiplier:
+            waveform = self._apply_gain(waveform)
+
+        # Pitch shift
+        if self.pitch_shift_enabled and random.random() < self.pitch_prob * self._prob_multiplier:
+            waveform = self._apply_pitch_shift(waveform)
+
+        # Codec simulation
+        if self.codec_enabled and random.random() < self.codec_prob * self._prob_multiplier:
+            waveform = self._apply_codec(waveform)
+
         # Noise injection
         if self.noise_enabled:
             if self.noise_transform is not None and AUDIOMENTATIONS_AVAILABLE:
@@ -381,6 +420,29 @@ class AudioAugmentation:
             waveform = waveform.squeeze(0)
 
         return waveform
+
+    def _apply_gain(self, waveform: torch.Tensor) -> torch.Tensor:
+        """Apply random gain (volume perturbation)."""
+        gain_db = random.uniform(self.gain_min_db, self.gain_max_db)
+        gain_linear = 10 ** (gain_db / 20)
+        return waveform * gain_linear
+
+    def _apply_pitch_shift(self, waveform: torch.Tensor) -> torch.Tensor:
+        """Apply pitch shift using torchaudio."""
+        import torchaudio.functional as F_audio
+
+        semitones = random.uniform(self.pitch_min_semitones, self.pitch_max_semitones)
+        if abs(semitones) < 0.1:
+            return waveform
+        return F_audio.pitch_shift(waveform, self.sample_rate, semitones)
+
+    def _apply_codec(self, waveform: torch.Tensor) -> torch.Tensor:
+        """Apply codec compression simulation via audiomentations."""
+        if self.codec_transform is None:
+            return waveform
+        waveform_np = waveform.squeeze(0).numpy()
+        waveform_np = self.codec_transform(waveform_np, sample_rate=self.sample_rate)
+        return torch.from_numpy(waveform_np).unsqueeze(0)
 
     def _speed_perturb(self, waveform: torch.Tensor, speed: float) -> torch.Tensor:
         """Apply speed perturbation using resampling.

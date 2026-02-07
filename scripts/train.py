@@ -124,31 +124,38 @@ def main():
     audio_aug = None
     spec_aug = None
 
-    if config.data.augmentation.get("noise", {}).get("enabled", False):
+    aug_cfg = config.data.augmentation
+    has_any_audio_aug = any(
+        aug_cfg.get(k, {}).get("enabled", False)
+        for k in ["noise", "speed_perturb", "silence", "gain", "pitch_shift", "codec"]
+    )
+
+    if has_any_audio_aug:
         audio_aug = AudioAugmentation(
-            noise_enabled=True,
-            min_snr_db=config.data.augmentation.noise.get("min_snr_db", 5),
-            max_snr_db=config.data.augmentation.noise.get("max_snr_db", 20),
-            speed_perturb_enabled=config.data.augmentation.get("speed_perturb", {}).get(
-                "enabled", False
-            ),
-            speed_rates=config.data.augmentation.get("speed_perturb", {}).get(
-                "rates", [0.9, 1.0, 1.1]
-            ),
-            silence_enabled=config.data.augmentation.get("silence", {}).get(
-                "enabled", False
-            ),
+            noise_enabled=aug_cfg.get("noise", {}).get("enabled", False),
+            min_snr_db=aug_cfg.get("noise", {}).get("min_snr_db", 5),
+            max_snr_db=aug_cfg.get("noise", {}).get("max_snr_db", 20),
+            speed_perturb_enabled=aug_cfg.get("speed_perturb", {}).get("enabled", False),
+            speed_rates=aug_cfg.get("speed_perturb", {}).get("rates", [0.9, 1.0, 1.1]),
+            silence_enabled=aug_cfg.get("silence", {}).get("enabled", False),
             silence_config={
-                "min_silence_duration": config.data.augmentation.get("silence", {}).get(
+                "min_silence_duration": aug_cfg.get("silence", {}).get(
                     "min_silence_duration", 0.5
                 ),
-                "max_silence_duration": config.data.augmentation.get("silence", {}).get(
+                "max_silence_duration": aug_cfg.get("silence", {}).get(
                     "max_silence_duration", 2.0
                 ),
-                "silence_prob": config.data.augmentation.get("silence", {}).get(
-                    "silence_prob", 0.3
-                ),
+                "silence_prob": aug_cfg.get("silence", {}).get("silence_prob", 0.3),
             },
+            gain_enabled=aug_cfg.get("gain", {}).get("enabled", False),
+            gain_min_db=aug_cfg.get("gain", {}).get("min_db", -6.0),
+            gain_max_db=aug_cfg.get("gain", {}).get("max_db", 6.0),
+            pitch_shift_enabled=aug_cfg.get("pitch_shift", {}).get("enabled", False),
+            pitch_min_semitones=aug_cfg.get("pitch_shift", {}).get("min_semitones", -2.0),
+            pitch_max_semitones=aug_cfg.get("pitch_shift", {}).get("max_semitones", 2.0),
+            codec_enabled=aug_cfg.get("codec", {}).get("enabled", False),
+            codec_min_bitrate=aug_cfg.get("codec", {}).get("min_bitrate", 32),
+            codec_max_bitrate=aug_cfg.get("codec", {}).get("max_bitrate", 128),
             sample_rate=config.data.sample_rate,
         )
 
@@ -305,6 +312,8 @@ def main():
         resume_from=args.resume,
         sample_rate=config.data.sample_rate,
         n_audio_samples=config.training.logging.get("n_audio_samples", 5),
+        min_lr=config.training.get("min_lr", 0.0),
+        early_stopping_patience=config.training.get("early_stopping_patience", None),
         aug_start_epoch=aug_start_epoch,
         aug_warmup_epochs=aug_warmup_epochs,
         set_augmentation_prob_fn=aug_controller.set_probability,

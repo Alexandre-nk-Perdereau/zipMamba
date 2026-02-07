@@ -55,10 +55,10 @@ PUNCT_REPLACEMENTS = {
     "»": '"',
     "‹": "'",
     "›": "'",
-    '"': '"',  # Curly quotes -> straight
-    '"': '"',
-    """: "'",
-    """: "'",
+    "\u2018": "'",  # Left single curly quote -> straight
+    "\u2019": "'",  # Right single curly quote (typographic apostrophe) -> straight
+    "\u201c": '"',  # Left double curly quote -> straight
+    "\u201d": '"',  # Right double curly quote -> straight
     "…": "...",  # Normalize ellipsis
 }
 
@@ -95,6 +95,9 @@ def normalize_text(text: str) -> str:
     """
     if not text:
         return text
+
+    # Normalize Unicode to NFC (compose decomposed characters)
+    text = unicodedata.normalize("NFC", text)
 
     # Remove emojis
     text = remove_emojis(text)
