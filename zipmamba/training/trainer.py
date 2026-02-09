@@ -129,9 +129,9 @@ class Trainer:
         self.n_audio_samples = n_audio_samples
         self.log_every_n_steps = log_every_n_steps
 
-        # Early stopping
+        # Early stopping (uses same metric as checkpointing)
         self.early_stopping_patience = early_stopping_patience
-        self._best_val_loss = float("inf")
+        self._best_val_metric = float("inf")
         self._patience_counter = 0
 
         # Augmentation schedule
@@ -292,10 +292,9 @@ class Trainer:
 
             # Early stopping check
             if self.early_stopping_patience is not None and val_metrics is not None:
-                val_loss = val_metrics["loss"]
-                if val_loss is not None:
-                    if val_loss < self._best_val_loss:
-                        self._best_val_loss = val_loss
+                if metric_value is not None:
+                    if metric_value < self._best_val_metric:
+                        self._best_val_metric = metric_value
                         self._patience_counter = 0
                     else:
                         self._patience_counter += 1
@@ -303,7 +302,8 @@ class Trainer:
                             console.print(
                                 f"[bold yellow]Early stopping triggered after "
                                 f"{self.early_stopping_patience} epochs without "
-                                f"val_loss improvement (best: {self._best_val_loss:.4f})[/bold yellow]"
+                                f"{self.checkpoint_metric} improvement "
+                                f"(best: {self._best_val_metric:.4f})[/bold yellow]"
                             )
                             # Save last checkpoint before stopping
                             self.checkpointer.save_last(

@@ -7,6 +7,7 @@ requires-python = ">=3.12, <3.13"
 dependencies = [
     "audiomentations>=0.43.1",
     "einops>=0.8.2",
+    "fast-mp3-augment>=0.2.0",
     "librosa>=0.11.0",
     "omegaconf>=2.3.0",
     "pyctcdecode>=0.5.0",

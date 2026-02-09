@@ -139,9 +139,11 @@ stacks:
 
 ### French (Common Voice FR)
 
+Outdated, waiting for a new traing to cemplete
+
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
-| Small (~35M) | 20.72 | 8.37 | 17.43 | 7.78 | 0.0002 |
+| Small (~35M) | 20.82 | 8.83 | 18.33 | 8.42 | 0.0002 |
 
 #### Breakdown by validation quality
 
@@ -149,8 +151,8 @@ stacks:
 
 | Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
 |--------|------|---------|---------|---------------|---------------|
-| down_votes == 0 | 13097 | 18.88 | 7.30 | 15.59 | 6.71 |
-| down_votes > 0 | 3099 | 28.40 | 12.83 | 25.08 | 12.21 |
+| down_votes == 0 | 13096 | 18.98 | 7.74 | 16.51 | 7.33 |
+| down_votes > 0 | 3100 | 28.48 | 13.34 | 25.88 | 12.91 |
 
 ### English (Common Voice EN)
 

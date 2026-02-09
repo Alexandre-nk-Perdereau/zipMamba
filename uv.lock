@@ -129,6 +129,24 @@ wheels = [
 ]
 
 [[package]]
+name = "fast-mp3-augment"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "numpy-minmax" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/17/bd/f4bd35409f5a304f6b71614c3bde63fbbab8bc12915c35387f6d1fa86df0/fast_mp3_augment-0.2.0.tar.gz", hash = "sha256:dae94a3abb7f8336d3d00b528f6132413cee72dfcdc91baf617f0a1d1bc8b8a9", size = 639867, upload-time = "2025-12-15T20:28:54.28Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/fb/c4739734d151c022cddcb02650ab411e02906b3a00fd0ae23c9a07f50b67/fast_mp3_augment-0.2.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:192a1193641253a3755bbe868a189cdf068e266a6a3b695f7e63daee5ee29eb0", size = 428631, upload-time = "2025-12-15T20:28:45.404Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/24/73b9d6e2327c0a4fdbaace1d661bd2159b22e53252db196d50e52ebcfb54/fast_mp3_augment-0.2.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4b404f8ca64505c9f35faf8c966af9a9877f44c060dcc492d90be47e32994724", size = 447149, upload-time = "2025-12-15T20:28:46.618Z" },
+    { url = "https://files.pythonhosted.org/packages/92/8e/335515e06d3967191e5be393c8b8de72f6f43cd047f34ee271e3f60c74d7/fast_mp3_augment-0.2.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d55288625b052635defbb0ab627fb49734b52985eb6d3ef69c35237cd80e2075", size = 460109, upload-time = "2025-12-15T20:28:47.929Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/7a/48b940814cf28af0a7f2efb257379b5371b23b6b2173c6451328bea7fb8c/fast_mp3_augment-0.2.0-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:ef8c0d0253e0a2a69d7afdde1fdd707b7d6dc051f017a53732eb23eaaa59c27f", size = 633915, upload-time = "2025-12-15T20:28:48.936Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/ae/32b96a043054edebd829b2ca43d38c9521b84f23db15eac717dfd2d19651/fast_mp3_augment-0.2.0-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:eda7af23231a657169f0f6f5be738e65b352e66b3a1b94dbd4d42b5e32825a31", size = 680760, upload-time = "2025-12-15T20:28:50.058Z" },
+    { url = "https://files.pythonhosted.org/packages/72/ba/1fd2bb82e59b2ef30c4846d5f40205d07f56cdd69746592d56414161ebef/fast_mp3_augment-0.2.0-cp39-abi3-win_amd64.whl", hash = "sha256:ebd3c60b00e2fbd8f2f507d867dab150979df23ad07b6da31da1163a448e43d2", size = 362888, upload-time = "2025-12-15T20:28:51.523Z" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.20.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1061,6 +1079,7 @@ source = { editable = "." }
 dependencies = [
     { name = "audiomentations" },
     { name = "einops" },
+    { name = "fast-mp3-augment" },
     { name = "librosa" },
     { name = "omegaconf" },
     { name = "pyctcdecode" },
@@ -1085,6 +1104,7 @@ dev = [
 requires-dist = [
     { name = "audiomentations", specifier = ">=0.43.1" },
     { name = "einops", specifier = ">=0.8.2" },
+    { name = "fast-mp3-augment", specifier = ">=0.2.0" },
     { name = "librosa", specifier = ">=0.11.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "pyctcdecode", specifier = ">=0.5.0" },
