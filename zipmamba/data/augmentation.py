@@ -50,8 +50,9 @@ class SpecAugmentation:
         self.time_warp_w = time_warp_w
         self.time_warp_p = time_warp_p
         self.p = p
-        # Global probability multiplier (set by trainer)
-        self._prob_multiplier = 1.0
+        # Shared-memory tensor so DataLoader workers (persistent_workers=True)
+        # see updates made by the main process (augmentation warmup schedule).
+        self._prob_multiplier = torch.tensor(1.0).share_memory_()
 
     def set_prob_multiplier(self, multiplier: float) -> None:
         """Set the probability multiplier for augmentation scheduling.
@@ -59,7 +60,7 @@ class SpecAugmentation:
         Args:
             multiplier: Value between 0.0 and 1.0 to scale augmentation probability.
         """
-        self._prob_multiplier = max(0.0, min(1.0, multiplier))
+        self._prob_multiplier.fill_(max(0.0, min(1.0, multiplier)))
 
     @property
     def effective_prob(self) -> float:
@@ -189,11 +190,11 @@ class SilenceAugmentation:
         self.max_silence_duration = max_silence_duration
         self.silence_prob = silence_prob
         self.sample_rate = sample_rate
-        self._prob_multiplier = 1.0
+        self._prob_multiplier = torch.tensor(1.0).share_memory_()
 
     def set_prob_multiplier(self, multiplier: float) -> None:
         """Set the probability multiplier for augmentation scheduling."""
-        self._prob_multiplier = max(0.0, min(1.0, multiplier))
+        self._prob_multiplier.fill_(max(0.0, min(1.0, multiplier)))
 
     @property
     def effective_prob(self) -> float:
@@ -290,7 +291,7 @@ class AudioAugmentation:
         self.speed_rates = speed_rates or [0.9, 1.0, 1.1]
         self.silence_enabled = silence_enabled
         self.sample_rate = sample_rate
-        self._prob_multiplier = 1.0
+        self._prob_multiplier = torch.tensor(1.0).share_memory_()
 
         # Gain
         self.gain_enabled = gain_enabled
@@ -350,7 +351,7 @@ class AudioAugmentation:
         Args:
             multiplier: Value between 0.0 and 1.0 to scale augmentation probability.
         """
-        self._prob_multiplier = max(0.0, min(1.0, multiplier))
+        self._prob_multiplier.fill_(max(0.0, min(1.0, multiplier)))
         self.silence_aug.set_prob_multiplier(multiplier)
 
     @property
