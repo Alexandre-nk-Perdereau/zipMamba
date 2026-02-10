@@ -19,8 +19,8 @@ training:
   early_stopping_patience: 10
 
   augmentation:
-    start_epoch: 5
-    warmup_epochs: 5
+    start_epoch: 3
+    warmup_epochs: 30
 
   logging:
     backend: tensorboard
