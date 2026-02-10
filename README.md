@@ -137,6 +137,9 @@ stacks:
 > Results on Common Voice (test split), greedy CTC decoding.
 > "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
 
+In progress: retraining with all fixes, in code state linked to commit 17cdd1020ce65a58f8f590a658a577bfdb2abf1f.
+TODO: Training without augmentation warmup strategy.
+
 ### French (Common Voice FR)
 
 Outdated, waiting for a new traing to cemplete
