@@ -79,6 +79,8 @@ def main():
         ff_expand=config.model.ff_expand,
         conv_kernel_size=config.model.conv_kernel_size,
         dropout=config.model.dropout,
+        drop_path=config.model.get("drop_path", 0.0),
+        use_intermediate_ctc=config.model.get("use_intermediate_ctc", False),
         conv_channels=conv_channels,
     )
 
