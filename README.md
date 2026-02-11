@@ -137,16 +137,13 @@ stacks:
 > Results on Common Voice (test split), greedy CTC decoding.
 > "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
 
-In progress: retraining with all fixes, in code state linked to commit 17cdd1020ce65a58f8f590a658a577bfdb2abf1f.
-TODO: Training without augmentation warmup strategy.
+TODO: Training without augmentation warmup strategy, beam search + LM decoding, EN training.
 
 ### French (Common Voice FR)
 
-Outdated, waiting for a new traing to cemplete
-
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
-| Small (~35M) | 20.82 | 8.83 | 18.33 | 8.42 | 0.0002 |
+| Small (~35M) | 16.67 | 6.59 | 14.35 | 6.21 | 0.0002 |
 
 #### Breakdown by validation quality
 
@@ -154,8 +151,8 @@ Outdated, waiting for a new traing to cemplete
 
 | Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
 |--------|------|---------|---------|---------------|---------------|
-| down_votes == 0 | 13096 | 18.98 | 7.74 | 16.51 | 7.33 |
-| down_votes > 0 | 3100 | 28.48 | 13.34 | 25.88 | 12.91 |
+| down_votes == 0 | 13097 | 15.26 | 5.78 | 12.99 | 5.40 |
+| down_votes > 0 | 3099 | 22.55 | 9.96 | 19.99 | 9.53 |
 
 ### English (Common Voice EN)
 
