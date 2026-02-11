@@ -10,15 +10,15 @@ model:
   conv_kernel_size: 31
   dropout: 0.1
 
-  drop_path: 0.1
+  drop_path: 0.15
 
   use_intermediate_ctc: true
   intermediate_ctc_weight: 0.3
 
   stacks:
-    - {dim: 192, blocks: 2, downsample: 2}
-    - {dim: 256, blocks: 4, downsample: 2}
-    - {dim: 384, blocks: 3, downsample: 2}
-    - {dim: 512, blocks: 2, downsample: null}
-    - {dim: 384, blocks: 3, upsample: 2}
-    - {dim: 256, blocks: 4, upsample: 2}
+    - {dim: 192, blocks: 2, downsample: 2}   # 50 → 25 Hz
+    - {dim: 256, blocks: 4, downsample: 2}   # 25 → 12.5 Hz  (small: 192x3 → 256x4)
+    - {dim: 384, blocks: 3, downsample: 2}   # 12.5 → 6.25 Hz  (small: 256x2 → 384x3)
+    - {dim: 512, blocks: 2, downsample: null} # bottleneck  (small: 320x2 → 512x2)
+    - {dim: 384, blocks: 3, upsample: 2}     # 6.25 → 12.5 Hz  (small: 256x2 → 384x3)
+    - {dim: 256, blocks: 4, upsample: 2}     # 12.5 → 25 Hz  (small: 192x3 → 256x4)
