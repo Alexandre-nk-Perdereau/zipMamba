@@ -178,6 +178,7 @@ def main():
     console.print("[bold]Creating dataloaders...[/bold]")
 
     num_workers = config.training.get("num_workers", 8)
+    persistent_workers = config.training.get("persistent_workers", False)
 
     is_multilang = isinstance(config.data.train_manifest, list)
 
@@ -194,7 +195,7 @@ def main():
             audio_augmentation=audio_aug,
             spec_augmentation=spec_aug,
             max_audio_length=config.training.max_audio_length,
-            persistent_workers=True,
+            persistent_workers=persistent_workers,
             prefetch_factor=config.training.get("prefetch_factor", 2),
         )
     else:
@@ -209,7 +210,7 @@ def main():
             audio_augmentation=audio_aug,
             spec_augmentation=spec_aug,
             max_audio_length=config.training.max_audio_length,
-            persistent_workers=True,
+            persistent_workers=persistent_workers,
             prefetch_factor=config.training.get("prefetch_factor", 2),
         )
 
@@ -227,7 +228,7 @@ def main():
                 audio_augmentation=None,
                 spec_augmentation=None,
                 max_audio_length=config.training.max_audio_length,
-                persistent_workers=True,
+                persistent_workers=persistent_workers,
                 prefetch_factor=config.training.get("prefetch_factor", 2),
             )
         else:
@@ -242,7 +243,7 @@ def main():
                 audio_augmentation=None,
                 spec_augmentation=None,
                 max_audio_length=config.training.max_audio_length,
-                persistent_workers=True,
+                persistent_workers=persistent_workers,
                 prefetch_factor=config.training.get("prefetch_factor", 2),
             )
 
