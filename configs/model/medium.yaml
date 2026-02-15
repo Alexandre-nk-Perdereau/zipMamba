@@ -16,7 +16,7 @@ model:
   intermediate_ctc_weight: 0.3
 
   stacks:
-    - {dim: 192, blocks: 3, downsample: 2}   # 50 → 25 Hz
+    - {dim: 192, blocks: 2, downsample: 2}   # 50 → 25 Hz
     - {dim: 320, blocks: 4, downsample: 2}   # 25 → 12.5 Hz
     - {dim: 384, blocks: 4, downsample: 2}   # 12.5 → 6.25 Hz
     - {dim: 384, blocks: 3, downsample: null} # bottleneck

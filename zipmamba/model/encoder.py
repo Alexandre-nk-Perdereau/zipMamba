@@ -27,7 +27,7 @@ STACK_CONFIG_SMALL = [
 ]
 
 STACK_CONFIG_MEDIUM = [
-    {"dim": 192, "blocks": 3, "downsample": 2},
+    {"dim": 192, "blocks": 2, "downsample": 2},
     {"dim": 320, "blocks": 4, "downsample": 2},
     {"dim": 384, "blocks": 4, "downsample": 2},
     {"dim": 384, "blocks": 3, "downsample": None},
