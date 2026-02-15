@@ -118,7 +118,7 @@ uv run scripts/transcribe.py \
 | Model | Parameters | Stack Dimensions |
 |-------|------------|------------------|
 | `small.yaml` | ~35M | 128, 192, 256, 320, 256, 192 |
-| `medium.yaml` | ~83M | 192, 256, 384, 512, 384, 256 |
+| `medium.yaml` | ~92M | 192, 256, 384, 512, 384, 256 |
 
 ### Small Model Configuration
 
@@ -137,34 +137,46 @@ stacks:
 > Results on Common Voice (test split), greedy CTC decoding.
 > "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
 
-TODO: Training without augmentation warmup strategy, beam search + LM decoding, EN training.
+TODO: beam search + LM decoding, EN training.
 
 ### French (Common Voice FR)
 
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
 | Small (~35M) | 16.67 | 6.59 | 14.35 | 6.21 | 0.0002 |
+| Medium (~92M) | 15.20 | 5.83 | 12.87 | 5.45 | 0.0003 |
 
 #### Breakdown by validation quality
 
 > Common Voice clips are community-validated: `down_votes` counts reviewers who flagged the audio as not matching the text. ~19% of the test set has `down_votes > 0`.
+
+##### Small (~35M)
 
 | Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
 |--------|------|---------|---------|---------------|---------------|
 | down_votes == 0 | 13097 | 15.26 | 5.78 | 12.99 | 5.40 |
 | down_votes > 0 | 3099 | 22.55 | 9.96 | 19.99 | 9.53 |
 
+##### Medium (~92M)
+
+| Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
+|--------|------|---------|---------|---------------|---------------|
+| down_votes == 0 | 13096 | 13.86 | 5.08 | 11.58 | 4.71 |
+| down_votes > 0 | 3100 | 20.78 | 8.96 | 18.23 | 8.55 |
+
 ### English (Common Voice EN)
 
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
 | Small (~35M) | - | - | - | - | - |
+| Medium (~92M) | - | - | - | - | - |
 
 ### French + English (Common Voice FR+EN)
 
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
 | Small (~35M) | - | - | - | - | - |
+| Medium (~92M) | - | - | - | - | - |
 
 ### Training Progress
 
