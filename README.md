@@ -136,8 +136,8 @@ stacks:
 
 > Results on Common Voice (test split), greedy CTC decoding.
 > "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
-
-TODO: Retrain small and medium with 2e12f080708a2f9ad527c0cd687f3480d0b0b0e2, beam search + LM decoding, EN training.
+IN PROGRESS: Retrain medium with 7be3f62d47444e04f68ad080c2e78eaf51682fe3.
+TODO: beam search + LM decoding, EN training.
 
 ### French (Common Voice FR)
 
