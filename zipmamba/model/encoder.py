@@ -27,12 +27,12 @@ STACK_CONFIG_SMALL = [
 ]
 
 STACK_CONFIG_MEDIUM = [
-    {"dim": 192, "blocks": 2, "downsample": 2},
-    {"dim": 256, "blocks": 4, "downsample": 2},
-    {"dim": 384, "blocks": 3, "downsample": 2},
-    {"dim": 512, "blocks": 2, "downsample": None},
-    {"dim": 384, "blocks": 3, "upsample": 2},
-    {"dim": 256, "blocks": 4, "upsample": 2},
+    {"dim": 192, "blocks": 3, "downsample": 2},
+    {"dim": 320, "blocks": 4, "downsample": 2},
+    {"dim": 384, "blocks": 4, "downsample": 2},
+    {"dim": 384, "blocks": 3, "downsample": None},
+    {"dim": 256, "blocks": 2, "upsample": 2},
+    {"dim": 192, "blocks": 3, "upsample": 2},
 ]
 
 STACK_CONFIG_LARGE = [
@@ -251,19 +251,22 @@ class EfficientASREncoder(nn.Module):
                 if x_lengths is not None:
                     x_lengths = self.upsamples[i].get_output_length(x_lengths)
 
-                if skip_connections:
-                    skip = skip_connections.pop()
-                    if skip.shape[-1] != x.shape[-1]:
-                        key = f"skip_{skip.shape[-1]}_to_{x.shape[-1]}"
-                        skip = self.skip_projs[key](skip)
-                    min_len = min(x.shape[1], skip.shape[1])
-                    x = x[:, :min_len, :] + skip[:, :min_len, :]
-                    if x_lengths is not None:
-                        x_lengths = x_lengths.clamp(max=min_len)
-
             stack_input = x
             for block in self.stacks[i]:
                 x = block(x)
+
+            if self.upsamples[i] is not None and skip_connections:
+                skip = skip_connections.pop()
+                if skip.shape[-1] != x.shape[-1]:
+                    key = f"skip_{skip.shape[-1]}_to_{x.shape[-1]}"
+                    skip = self.skip_projs[key](skip)
+                min_len = min(x.shape[1], skip.shape[1])
+                skip = skip[:, :min_len, :]
+                x = x[:, :min_len, :] + skip
+                stack_input = stack_input[:, :min_len, :] + skip
+                if x_lengths is not None:
+                    x_lengths = x_lengths.clamp(max=min_len)
+
             x = self.bypasses[i](stack_input, x)
 
             if return_intermediates and i == mid_point:

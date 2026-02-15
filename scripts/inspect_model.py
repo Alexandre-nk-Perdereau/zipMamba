@@ -199,7 +199,7 @@ def comparative_analysis(state_small, state_medium):
 
 def main():
     small_ckpt_path = "checkpoints/small_fr_11022026/best_step_326577_val_wer_0.1339.pt"
-    medium_ckpt_path = "checkpoints/20260212_001303/best_step_331310_val_wer_0.1219.pt"
+    medium_ckpt_path = "checkpoints/medium_fr_15022026/best_step_331310_val_wer_0.1219.pt"
 
     # --- SMALL ---
     print("=" * 70)
