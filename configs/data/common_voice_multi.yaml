@@ -25,10 +25,12 @@ data:
   augmentation:
     spec_augment:
       enabled: true
-      freq_mask_param: 27
-      time_mask_param: 100
+      freq_mask_param: 20
+      time_mask_param: 70
       n_freq_masks: 2
-      n_time_masks: 10
+      n_time_masks: 5
+      time_warp_w: 40
+      time_warp_p: 0.5
 
     noise:
       enabled: true
@@ -39,9 +41,24 @@ data:
     silence:
       enabled: true
       min_silence_duration: 0.5
-      max_silence_duration: 2.0
+      max_silence_duration: 1.0
       silence_prob: 0.3
 
     speed_perturb:
       enabled: true
-      rates: [0.9, 1.0, 1.1]
+      rates: [0.9, 0.95, 1.0, 1.05, 1.1]
+
+    gain:
+      enabled: true
+      min_db: -6
+      max_db: 6
+
+    pitch_shift:
+      enabled: false
+      min_semitones: -2
+      max_semitones: 2
+
+    codec:
+      enabled: true
+      min_bitrate: 48
+      max_bitrate: 128
