@@ -19,7 +19,7 @@ data:
 
   tokenizer:
     type: sentencepiece
-    vocab_size: 8000
+    vocab_size: 1500
     model_path: ./tokenizer/multi_bpe.model
 
   augmentation:

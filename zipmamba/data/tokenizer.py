@@ -79,7 +79,7 @@ class Tokenizer:
             model_prefix=str(model_prefix),
             vocab_size=vocab_size,
             model_type="bpe",
-            character_coverage=1.0,
+            character_coverage=0.9999,
             pad_id=0,  # Reserve 0 for CTC blank
             unk_id=1,
             bos_id=-1,  # No BOS
