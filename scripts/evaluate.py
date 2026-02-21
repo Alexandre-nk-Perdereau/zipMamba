@@ -212,8 +212,8 @@ def main():
     wer_norm = compute_wer_normalized(all_references, all_hypotheses)
     cer_norm = compute_cer_normalized(all_references, all_hypotheses)
 
-    rtf = (
-        total_inference_time / total_audio_duration if total_audio_duration > 0 else 0.0
+    rtfx = (
+        total_audio_duration / total_inference_time if total_inference_time > 0 else 0.0
     )
 
     table = Table(title="Evaluation Results")
@@ -224,7 +224,7 @@ def main():
     table.add_row("CER", f"{cer * 100:.2f}%")
     table.add_row("WER (normalized)", f"{wer_norm * 100:.2f}%")
     table.add_row("CER (normalized)", f"{cer_norm * 100:.2f}%")
-    table.add_row("RTF", f"{rtf:.4f}")
+    table.add_row("RTFx", f"{rtfx:.0f}x")
     table.add_row("Samples", str(len(all_references)))
     table.add_row("Audio duration", f"{total_audio_duration:.1f}s")
     table.add_row("Inference time", f"{total_inference_time:.1f}s")
@@ -278,7 +278,7 @@ def main():
                 "cer": cer,
                 "wer_norm": wer_norm,
                 "cer_norm": cer_norm,
-                "rtf": rtf,
+                "rtfx": rtfx,
                 "samples": len(all_references),
                 "audio_duration_s": total_audio_duration,
                 "inference_time_s": total_inference_time,

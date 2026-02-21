@@ -140,10 +140,10 @@ TODO: beam search + LM decoding, EN training. Retrain medium FR with vocab 1000.
 
 ### French (Common Voice FR)
 
-| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
-|-------|---------|---------|---------------|---------------|-----|
-| Small (~35M) | 16.64 | 6.05 | 14.27 | 5.66 | 0.0002 |
-| Medium (~80M) | 14.22 | 5.29 | 11.93 | 4.92 | 0.0004 |
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTFx |
+|-------|---------|---------|---------------|---------------|------|
+| Small (~35M) | 16.64 | 6.05 | 14.27 | 5.66 | 4356x |
+| Medium (~80M) | 14.22 | 5.29 | 11.93 | 4.92 | - |
 
 #### Breakdown by validation quality
 
@@ -165,17 +165,17 @@ TODO: beam search + LM decoding, EN training. Retrain medium FR with vocab 1000.
 
 ### English (Common Voice EN)
 
-| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
-|-------|---------|---------|---------------|---------------|-----|
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTFx |
+|-------|---------|---------|---------------|---------------|------|
 | Small (~35M) | - | - | - | - | - |
-| Medium (~92M) | - | - | - | - | - |
+| Medium (~80M) | - | - | - | - | - |
 
 ### French + English (Common Voice FR+EN)
 
-| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
-|-------|---------|---------|---------------|---------------|-----|
+| Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTFx |
+|-------|---------|---------|---------------|---------------|------|
 | Small (~35M) | - | - | - | - | - |
-| Medium (~92M) | - | - | - | - | - |
+| Medium (~80M) | - | - | - | - | - |
 
 ### Training Progress
 
