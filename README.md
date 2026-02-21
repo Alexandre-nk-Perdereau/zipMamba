@@ -136,13 +136,13 @@ stacks:
 
 > Results on Common Voice (test split), greedy CTC decoding.
 > "Normalized" metrics ignore punctuation and special characters (only letters, digits and spaces are compared).
-TODO: beam search + LM decoding, EN training. Retrain small fr to check if c25c13a9bf7ac3b6ccdbad067d7f329bcfdcb757 has an impact on performances
+TODO: beam search + LM decoding, EN training. Retrain medium FR with vocab 1000.
 
 ### French (Common Voice FR)
 
 | Model | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) | RTF |
 |-------|---------|---------|---------------|---------------|-----|
-| Small (~35M) | 16.67 | 6.59 | 14.35 | 6.21 | 0.0002 |
+| Small (~35M) | 16.64 | 6.05 | 14.27 | 5.66 | 0.0002 |
 | Medium (~80M) | 14.22 | 5.29 | 11.93 | 4.92 | 0.0004 |
 
 #### Breakdown by validation quality
@@ -153,8 +153,8 @@ TODO: beam search + LM decoding, EN training. Retrain small fr to check if c25c1
 
 | Subset | N | WER (%) | CER (%) | WER norm. (%) | CER norm. (%) |
 |--------|------|---------|---------|---------------|---------------|
-| down_votes == 0 | 13097 | 15.26 | 5.78 | 12.99 | 5.40 |
-| down_votes > 0 | 3099 | 22.55 | 9.96 | 19.99 | 9.53 |
+| down_votes == 0 | 13097 | 15.15 | 5.25 | 12.81 | 4.87 |
+| down_votes > 0 | 3099 | 22.84 | 9.35 | 20.31 | 8.93 |
 
 ##### Medium (~80M)
 
