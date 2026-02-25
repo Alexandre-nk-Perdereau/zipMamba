@@ -289,6 +289,10 @@ def main():
         f"Augmentation: starts at epoch {aug_start_epoch}, warmup {aug_warmup_epochs} epochs"
     )
 
+    run_name = args.run_name
+    if run_name is None and args.resume is not None:
+        run_name = Path(args.resume).parent.name
+
     trainer = Trainer(
         model=model,
         train_dataloader=train_dataloader,
@@ -304,7 +308,7 @@ def main():
         mixed_precision=config.training.mixed_precision,
         log_dir=config.training.logging.log_dir,
         log_every_n_steps=config.training.logging.log_every_n_steps,
-        run_name=args.run_name,
+        run_name=run_name,
         save_dir=config.training.checkpointing.save_dir,
         keep_top_k_checkpoints=config.training.checkpointing.keep_top_k,
         checkpoint_metric=config.training.checkpointing.metric,
